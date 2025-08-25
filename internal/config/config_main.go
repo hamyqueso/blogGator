@@ -50,6 +50,32 @@ func getConfigFilePath() (string, error) {
 	return filepath.Join(home, configFileName), nil
 }
 
-func (config Config) SetUser(username string) (Config, error) {
-	return Config{}, nil
+func (config Config) SetUser(username string) error {
+	config.CurrentUserName = username
+
+	if err := write(config); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func write(cfg Config) error {
+	byteValue, err := json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	path, err := getConfigFilePath()
+	if err != nil {
+		return err
+	}
+
+	filePermissions := os.FileMode(0644) // Read/write for owner, read-only for group and others
+
+	if err = os.WriteFile(path, byteValue, filePermissions); err != nil {
+		return err
+	}
+
+	return nil
 }

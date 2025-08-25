@@ -11,6 +11,16 @@ func main() {
 	if err != nil {
 		fmt.Printf("%v\n", err)
 	}
+
+	if err = c.SetUser("jonny"); err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
+	c, err = config.Read()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
 	fmt.Println(c.DBURL)
 	fmt.Println(c.CurrentUserName)
 }
