@@ -1,10 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 
 	"github.com/hamyqueso/blogGator/internal/config"
+	"github.com/hamyqueso/blogGator/internal/database"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -18,7 +21,16 @@ func main() {
 	// 	fmt.Printf("%v\n", err)
 	// }
 
-	s := &state{cfg: &c}
+	db, err := sql.Open("postgres", c.DBURL)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+
+	dbQueries := database.New(db)
+
+	s := &state{cfg: &c, db: dbQueries}
+
 	if len(os.Args) < 2 {
 		fmt.Println("Need at least 2 arguments")
 		os.Exit(1)
@@ -27,6 +39,9 @@ func main() {
 	cmds := commands{handlers: make(map[string]func(*state, command) error)}
 
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerUsers)
 
 	err = cmds.run(s, cmd)
 	if err != nil {
