@@ -151,6 +151,23 @@ func handlerAddFeed(s *state, cmd command) error {
 	return nil
 }
 
+func handlerFeeds(s *state, cmd command) error {
+	items, err := s.db.ListFeeds(context.Background())
+	if err != nil {
+		return errors.New("error obtaining data from feeds table")
+	}
+
+	for _, item := range items {
+		user, err := s.db.GetUserByID(context.Background(), item.UserID)
+		if err != nil {
+			return errors.New("error getting username from users table by id")
+		}
+		fmt.Printf("Feed name: %s; Feed URL: %s; Creating User: %s\n", item.Name, item.Url, user.Name)
+	}
+
+	return nil
+}
+
 type commands struct {
 	handlers map[string]func(*state, command) error
 }

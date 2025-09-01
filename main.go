@@ -44,6 +44,7 @@ func main() {
 	cmds.register("users", handlerUsers)
 	cmds.register("agg", handlerAgg)
 	cmds.register("addfeed", handlerAddFeed)
+	cmds.register("feeds", handlerFeeds)
 
 	err = cmds.run(s, cmd)
 	if err != nil {
@@ -56,6 +57,6 @@ func main() {
 		fmt.Printf("%v\n", err)
 	}
 
-	fmt.Println(c.DBURL)
-	fmt.Println(c.CurrentUserName)
+	// fmt.Println(c.DBURL)
+	// fmt.Println(c.CurrentUserName)
 }
