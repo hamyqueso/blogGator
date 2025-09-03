@@ -23,8 +23,8 @@ SELECT
   feeds.name AS feed_name,
   users.name AS user_name
 FROM inserted_feed_follows
-INNER JOIN feeds ON inserted_feed_follows.user_id = users.id
-INNER JOIN users ON inserted_feed_follows.feed_id = feeds.id
+INNER JOIN feeds ON inserted_feed_follows.feed_id = feeds.id
+INNER JOIN users ON inserted_feed_follows.user_id = users.id
 `
 
 type CreateFeedFollowParams struct {
@@ -63,6 +63,34 @@ func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowPara
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFollowingFeeds = `-- name: GetFollowingFeeds :many
+SELECT feed_id FROM feed_follows
+WHERE user_id = $1
+`
+
+func (q *Queries) GetFollowingFeeds(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.QueryContext(ctx, getFollowingFeeds, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var feed_id uuid.UUID
+		if err := rows.Scan(&feed_id); err != nil {
+			return nil, err
+		}
+		items = append(items, feed_id)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
