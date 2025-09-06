@@ -126,15 +126,15 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 2 {
 		return errors.New("error add feed command requires two parameters (name, url)")
 	}
 
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
-	}
+	// user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
+	// if err != nil {
+	// 	return err
+	// }
 
 	params := database.CreateFeedParams{
 		Name:   cmd.args[0],
@@ -177,14 +177,14 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFeedFollow(s *state, cmd command) error {
+func handlerFeedFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 1 {
 		return errors.New("follow command requires a url argument")
 	}
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
-	}
+	// user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
+	// if err != nil {
+	// 	return err
+	// }
 
 	feed, err := s.db.GetFeedByURL(context.Background(), cmd.args[0])
 	if err != nil {
@@ -206,12 +206,7 @@ func handlerFeedFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
-	}
-
+func handlerFollowing(s *state, cmd command, user database.User) error {
 	feeds, err := s.db.GetFollowingFeeds(context.Background(), user.ID)
 	if err != nil {
 		return err
@@ -228,6 +223,20 @@ func handlerFollowing(s *state, cmd command) error {
 	}
 
 	return nil
+}
+
+func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	return func(s *state, cmd command) error {
+		usr, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
+		if err != nil {
+			return err
+		}
+		err = handler(s, cmd, usr)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 }
 
 type commands struct {
