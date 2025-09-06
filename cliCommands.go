@@ -239,6 +239,27 @@ func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) 
 	}
 }
 
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+	if len(cmd.args) < 1 {
+		fmt.Println("unfollow command requires feed url parameter")
+		os.Exit(1)
+	}
+
+	feed, err := s.db.GetFeedByURL(context.Background(), cmd.args[0])
+	if err != nil {
+		return err
+	}
+	params := database.UnfollowFeedParams{
+		UserID: user.ID,
+		FeedID: feed.ID,
+	}
+	err = s.db.UnfollowFeed(context.Background(), params)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type commands struct {
 	handlers map[string]func(*state, command) error
 }
