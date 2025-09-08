@@ -114,16 +114,61 @@ func handlerUsers(s *state, cmd command) error {
 }
 
 func handlerAgg(s *state, cmd command) error {
-	url := "https://www.wagslane.dev/index.xml"
+	// url := "https://www.wagslane.dev/index.xml"
+	//
+	// feed, err := fetchFeed(context.Background(), url)
+	// if err != nil {
+	// 	fmt.Println("error fetching rss feed")
+	// 	return err
+	// }
+	//
+	// fmt.Println(feed)
 
-	feed, err := fetchFeed(context.Background(), url)
+	if len(cmd.args) < 1 {
+		return errors.New("agg command requires time duration in seconds")
+	}
+
+	duration, err := time.ParseDuration(cmd.args[0])
 	if err != nil {
-		fmt.Println("error fetching rss feed")
 		return err
 	}
 
-	fmt.Println(feed)
+	fmt.Printf("Collecting feeds every %v\n", duration)
+
+	ticker := time.NewTicker(duration)
+	for ; ; <-ticker.C {
+		// fmt.Println("ticking...")
+		scrapeFeeds(s)
+	}
+
 	return nil
+}
+
+func scrapeFeeds(s *state) {
+	feed, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
+	fmt.Printf("working on feed: %s\n", feed.Name)
+
+	err = s.db.MarkFeedFetched(context.Background(), feed.ID)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
+	// fmt.Printf("feed marked. last fetched at: %s", feed.LastFetchedAt.Time)
+
+	rss, err := fetchFeed(context.Background(), feed.Url)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
+	for _, item := range rss.Channel.Item {
+		if item.Title != "" {
+			fmt.Printf("* %s\n", item.Title)
+		}
+	}
 }
 
 func handlerAddFeed(s *state, cmd command, user database.User) error {
