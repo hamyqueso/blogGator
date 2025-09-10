@@ -8,6 +8,7 @@ import (
 	"html"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -197,11 +198,45 @@ func scrapeFeeds(s *state) {
 			PublishedAt: t,
 			FeedID:      feed.ID,
 		}
+
+		var pqErr *pq.Error
+
 		_, err = s.db.CreatePost(context.Background(), params)
-		if err != nil {
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+		} else if err != nil {
 			fmt.Printf("%v\n", err)
 		}
 	}
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	var limit int64
+	var err error
+	if len(cmd.args) < 1 {
+		limit = 2
+	} else {
+
+		limit, err = strconv.ParseInt(cmd.args[0], 10, 32)
+		if err != nil {
+			return err
+		}
+	}
+
+	params := database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  int32(limit),
+	}
+
+	posts, err := s.db.GetPostsForUser(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	for _, post := range posts {
+		fmt.Printf("%v\n", post)
+	}
+
+	return nil
 }
 
 func handlerAddFeed(s *state, cmd command, user database.User) error {
