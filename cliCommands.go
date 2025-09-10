@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"html"
 	"log"
 	"os"
 	"time"
@@ -165,8 +166,40 @@ func scrapeFeeds(s *state) {
 	}
 
 	for _, item := range rss.Channel.Item {
-		if item.Title != "" {
-			fmt.Printf("* %s\n", item.Title)
+		// if item.Title != "" {
+		// 	fmt.Printf("* %s\n", item.Title)
+		// 	fmt.Printf("%s\n", item.PubDate)
+		// }
+		//
+		const layout = "Mon, 02 Jan 2006 03:04:05 +0700"
+		t, err := time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+		}
+
+		var description sql.NullString
+
+		if item.Description != "" {
+			description = sql.NullString{
+				String: html.UnescapeString(item.Description),
+				Valid:  true,
+			}
+		} else {
+			description = sql.NullString{
+				String: "",
+				Valid:  false,
+			}
+		}
+		params := database.CreatePostParams{
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: description,
+			PublishedAt: t,
+			FeedID:      feed.ID,
+		}
+		_, err = s.db.CreatePost(context.Background(), params)
+		if err != nil {
+			fmt.Printf("%v\n", err)
 		}
 	}
 }
