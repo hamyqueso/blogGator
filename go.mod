@@ -1,4 +1,4 @@
-module github.com/hamyqueso/blogGator
+module github.com/hamyqueso/gator
 
 go 1.24.5
 

@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hamyqueso/blogGator/internal/config"
-	"github.com/hamyqueso/blogGator/internal/database"
+	"github.com/hamyqueso/gator/internal/config"
+	"github.com/hamyqueso/gator/internal/database"
 	"github.com/lib/pq"
 )
 
