@@ -233,7 +233,15 @@ func handlerBrowse(s *state, cmd command, user database.User) error {
 	}
 
 	for _, post := range posts {
-		fmt.Printf("%v\n", post)
+		fmt.Println()
+		fmt.Printf("Title: %v\n", post.Title)
+		fmt.Printf("Blog: %v\n", post.BlogName)
+		if post.Description.Valid {
+			fmt.Printf("Description: %v\n", post.Description.String)
+		}
+		fmt.Printf("Link: %v\n", post.Url)
+		fmt.Printf("Timestamp: %v\n", post.DisplayTime)
+
 	}
 
 	return nil

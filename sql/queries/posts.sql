@@ -10,8 +10,17 @@ VALUES (
 RETURNING *;
 
 -- name: GetPostsForUser :many
-SELECT posts.* FROM posts INNER JOIN feed_follows
-ON posts.feed_id = feed_follows.feed_id
+SELECT
+  posts.title,
+  feeds.name AS blog_name,
+  posts.url,
+  posts.description,
+  COALESCE(posts.published_at, posts.created_at) AS display_time
+FROM posts
+JOIN feed_follows ON posts.feed_id = feed_follows.feed_id
+JOIN feeds ON posts.feed_id = feeds.id
 WHERE feed_follows.user_id = $1
-ORDER BY posts.published_at DESC
+ORDER BY 
+  COALESCE(posts.published_at, posts.created_at) DESC,
+  posts.id DESC
 LIMIT $2;
